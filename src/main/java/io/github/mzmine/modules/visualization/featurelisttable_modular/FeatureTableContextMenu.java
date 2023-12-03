@@ -62,9 +62,10 @@ import io.github.mzmine.datamodel.impl.SimpleDataPoint;
 import io.github.mzmine.datamodel.impl.SimplePseudoSpectrum;
 import io.github.mzmine.main.MZmineCore;
 import io.github.mzmine.modules.dataprocessing.featdet_manual.XICManualPickerModule;
+import io.github.mzmine.modules.dataprocessing.group_imagecorrelate.ColocatedImagePane;
 import io.github.mzmine.modules.dataprocessing.id_biotransformer.BioTransformerModule;
 import io.github.mzmine.modules.dataprocessing.id_formulaprediction.FormulaPredictionModule;
-import io.github.mzmine.modules.dataprocessing.id_lipididentification.lipidutils.MatchedLipid;
+import io.github.mzmine.modules.dataprocessing.id_lipididentification.common.lipididentificationtools.matchedlipidannotations.MatchedLipid;
 import io.github.mzmine.modules.dataprocessing.id_nist.NistMsSearchModule;
 import io.github.mzmine.modules.dataprocessing.id_spectral_library_match.SpectralLibrarySearchModule;
 import io.github.mzmine.modules.io.export_features_gnps.masst.GnpsMasstSubmitModule;
@@ -480,16 +481,16 @@ public class FeatureTableContextMenu extends ContextMenu {
       }
     });
 
-    final MenuItem showDiaIons = new ConditionalMenuItem("Show DIA ion shapes",
+    final MenuItem showPseudoSpectrumItem = new ConditionalMenuItem("Show Pseudo Spectrum",
         () -> selectedFeature != null
-              && selectedFeature.getMostIntenseFragmentScan() instanceof PseudoSpectrum);
-    showDiaIons.setOnAction(e -> showDiaMsMsIons());
+            && selectedFeature.getMostIntenseFragmentScan() instanceof PseudoSpectrum);
+    showPseudoSpectrumItem.setOnAction(e -> showPseudoSpectrum());
 
     final MenuItem showDiaMirror = new ConditionalMenuItem(
         "DIA spectral mirror: Correlated-to-all signals",
         () -> selectedFeature != null && selectedFeature.getRawDataFile() instanceof IMSRawDataFile
-              && selectedFeature.getFeatureData() instanceof IonMobilogramTimeSeries
-              && selectedFeature.getMostIntenseFragmentScan() instanceof PseudoSpectrum);
+            && selectedFeature.getFeatureData() instanceof IonMobilogramTimeSeries
+            && selectedFeature.getMostIntenseFragmentScan() instanceof PseudoSpectrum);
     showDiaMirror.setOnAction(e -> showDiaMirror());
 
     final MenuItem showMSMSMirrorItem = new ConditionalMenuItem("Mirror MS/MS (2 rows)",
