@@ -39,82 +39,117 @@ import org.jfree.data.xy.AbstractXYZDataset;
  */
 public class KendrickMassPlotXYZDataset extends AbstractXYZDataset {
 
-  private FeatureListRow[] selectedRows;
+  private final FeatureListRow[] selectedRows;
   private double[] xValues;
   private double[] yValues;
   private double[] colorScaleValues;
   private double[] bubbleSizeValues;
+  private KendrickPlotDataTypes xKendrickDataType;
+  private KendrickPlotDataTypes yKendrickDataType;
+  private KendrickPlotDataTypes colorKendrickDataType;
+  private KendrickPlotDataTypes bubbleKendrickDataType;
   private ParameterSet parameters;
+  private Integer xDivisor;
+  private int xCharge;
+  private Integer yDivisor;
+  private int yCharge;
 
-  public KendrickMassPlotXYZDataset(double[] xValues, double[] yValues, double[] colorScaleValues,
-      double[] bubbleSizeValues) {
-    super();
-    this.xValues = xValues;
-    this.yValues = yValues;
-    this.colorScaleValues = colorScaleValues;
-    this.bubbleSizeValues = bubbleSizeValues;
-  }
-
-  public KendrickMassPlotXYZDataset(ParameterSet parameters) {
-
+  public KendrickMassPlotXYZDataset(ParameterSet parameters, int xCharge,
+      int yCharge) {
     FeatureList featureList = parameters.getParameter(KendrickMassPlotParameters.featureList)
         .getValue().getMatchingFeatureLists()[0];
-
-    this.parameters = parameters;
+    this.parameters = parameters.cloneParameterSet();
     this.selectedRows = featureList.getRows().toArray(new FeatureListRow[0]);
-
+    this.xCharge = xCharge;
+    this.yCharge = yCharge;
     xValues = new double[selectedRows.length];
     yValues = new double[selectedRows.length];
     colorScaleValues = new double[selectedRows.length];
     bubbleSizeValues = new double[selectedRows.length];
-    initDimensionValues(xValues,
-        parameters.getParameter(KendrickMassPlotParameters.xAxisCustomKendrickMassBase).getValue(),
-        parameters.getParameter(KendrickMassPlotParameters.xAxisValues).getValue());
-    initDimensionValues(yValues,
-        parameters.getParameter(KendrickMassPlotParameters.yAxisCustomKendrickMassBase).getValue(),
-        parameters.getParameter(KendrickMassPlotParameters.yAxisValues).getValue());
-    initDimensionValues(colorScaleValues,
-        parameters.getParameter(KendrickMassPlotParameters.colorScaleCustomKendrickMassBase)
-            .getValue(),
-        parameters.getParameter(KendrickMassPlotParameters.colorScaleValues).getValue());
-    initDimensionValues(bubbleSizeValues,
-        parameters.getParameter(KendrickMassPlotParameters.bubbleSizeCustomKendrickMassBase)
-            .getValue(),
-        parameters.getParameter(KendrickMassPlotParameters.bubbleSizeValues).getValue());
+    init();
+  }
+
+  public KendrickMassPlotXYZDataset(ParameterSet parameters, int xDivisor, int xCharge,
+      int yDivisor, int yCharge) {
+    FeatureList featureList = parameters.getParameter(KendrickMassPlotParameters.featureList)
+        .getValue().getMatchingFeatureLists()[0];
+    this.parameters = parameters.cloneParameterSet();
+    this.selectedRows = featureList.getRows().toArray(new FeatureListRow[0]);
+    this.xDivisor = xDivisor;
+    this.xCharge = xCharge;
+    this.yDivisor = yDivisor;
+    this.yCharge = yCharge;
+    xValues = new double[selectedRows.length];
+    yValues = new double[selectedRows.length];
+    colorScaleValues = new double[selectedRows.length];
+    bubbleSizeValues = new double[selectedRows.length];
+    init();
   }
 
   public KendrickMassPlotXYZDataset(ParameterSet parameters, List<FeatureListRow> rows) {
-
-    this.parameters = parameters;
+    this.parameters = parameters.cloneParameterSet();
     this.selectedRows = rows.toArray(new FeatureListRow[0]);
 
     xValues = new double[selectedRows.length];
     yValues = new double[selectedRows.length];
     colorScaleValues = new double[selectedRows.length];
     bubbleSizeValues = new double[selectedRows.length];
+    init();
+  }
+
+  private void init() {
+    xKendrickDataType = parameters.getParameter(KendrickMassPlotParameters.xAxisValues)
+        .getValue();
+    if (xDivisor == null && xKendrickDataType.isKendrickType()) {
+      this.xDivisor = calculateDivisorKM(
+          parameters.getParameter(KendrickMassPlotParameters.xAxisCustomKendrickMassBase)
+              .getValue());
+      if (xKendrickDataType.equals(KendrickPlotDataTypes.REMAINDER_OF_KENDRICK_MASS)) {
+        xDivisor++;
+      }
+    } else if (xDivisor == null) {
+      xDivisor = 1;
+    }
     initDimensionValues(xValues,
         parameters.getParameter(KendrickMassPlotParameters.xAxisCustomKendrickMassBase).getValue(),
-        parameters.getParameter(KendrickMassPlotParameters.xAxisValues).getValue());
+        xKendrickDataType, xDivisor, xCharge);
+    yKendrickDataType = parameters.getParameter(
+        KendrickMassPlotParameters.yAxisValues).getValue();
+    if (yDivisor == null && yKendrickDataType.isKendrickType()) {
+      this.yDivisor = calculateDivisorKM(
+          parameters.getParameter(KendrickMassPlotParameters.yAxisCustomKendrickMassBase)
+              .getValue());
+      if (yKendrickDataType.equals(KendrickPlotDataTypes.REMAINDER_OF_KENDRICK_MASS)) {
+        yDivisor++;
+      }
+    } else if (yDivisor == null) {
+      yDivisor = 1;
+    }
     initDimensionValues(yValues,
         parameters.getParameter(KendrickMassPlotParameters.yAxisCustomKendrickMassBase).getValue(),
-        parameters.getParameter(KendrickMassPlotParameters.yAxisValues).getValue());
+        yKendrickDataType, yDivisor, yCharge);
+    colorKendrickDataType = parameters.getParameter(
+        KendrickMassPlotParameters.colorScaleValues).getValue();
     initDimensionValues(colorScaleValues,
         parameters.getParameter(KendrickMassPlotParameters.colorScaleCustomKendrickMassBase)
             .getValue(),
-        parameters.getParameter(KendrickMassPlotParameters.colorScaleValues).getValue());
+        colorKendrickDataType, 1, 1);
+    bubbleKendrickDataType = parameters.getParameter(
+        KendrickMassPlotParameters.bubbleSizeValues).getValue();
     initDimensionValues(bubbleSizeValues,
         parameters.getParameter(KendrickMassPlotParameters.bubbleSizeCustomKendrickMassBase)
             .getValue(),
-        parameters.getParameter(KendrickMassPlotParameters.bubbleSizeValues).getValue());
+        bubbleKendrickDataType, 1, 1);
   }
 
   private void initDimensionValues(double[] values, String kendrickMassBase,
-      KendrickPlotDataTypes kendrickPlotDataType) {
+      KendrickPlotDataTypes kendrickPlotDataType, int divisor, int charge) {
     boolean isKendrickType = kendrickPlotDataType.isKendrickType();
     if (isKendrickType) {
       switch (kendrickPlotDataType) {
-        case KENDRICK_MASS -> calculateKMs(values, kendrickMassBase);
-        case KENDRICK_MASS_DEFECT -> calculateKMDs(values, kendrickMassBase);
+        case KENDRICK_MASS -> calculateKMs(values, kendrickMassBase, divisor, charge);
+        case KENDRICK_MASS_DEFECT -> calculateKMDs(values, kendrickMassBase, divisor, charge);
+        case REMAINDER_OF_KENDRICK_MASS -> calculateRKMs(values, kendrickMassBase, divisor, charge);
       }
     } else {
       switch (kendrickPlotDataType) {
@@ -198,15 +233,24 @@ public class KendrickMassPlotXYZDataset extends AbstractXYZDataset {
     }
   }
 
-  private void calculateKMDs(double[] values, String kendrickMassBase) {
+  private void calculateKMDs(double[] values, String kendrickMassBase, int divisor, int charge) {
     for (int i = 0; i < selectedRows.length; i++) {
-      values[i] = calculateKendrickMassDefect(selectedRows[i].getAverageMZ(), kendrickMassBase);
+      values[i] = calculateKendrickMassDefectChargeAndDivisorDependent(
+          selectedRows[i].getAverageMZ(), kendrickMassBase, charge, divisor);
     }
   }
 
-  private void calculateKMs(double[] values, String kendrickMassBase) {
+  private void calculateRKMs(double[] values, String kendrickMassBase, int divisor, int charge) {
     for (int i = 0; i < selectedRows.length; i++) {
-      values[i] = calculateKendrickMass(selectedRows[i].getAverageMZ(), kendrickMassBase);
+      values[i] = calculateRemainderOfKendrickMassChargeAndDivisorDependent(
+          selectedRows[i].getAverageMZ(), kendrickMassBase, charge, divisor);
+    }
+  }
+
+  private void calculateKMs(double[] values, String kendrickMassBase, int divisor, int charge) {
+    for (int i = 0; i < selectedRows.length; i++) {
+      values[i] = calculateKendrickMassChargeAndDivisorDependent(selectedRows[i].getAverageMZ(),
+          kendrickMassBase, charge, divisor);
     }
   }
 
@@ -278,6 +322,38 @@ public class KendrickMassPlotXYZDataset extends AbstractXYZDataset {
     return bubbleSizeValues;
   }
 
+  public KendrickPlotDataTypes getxKendrickDataType() {
+    return xKendrickDataType;
+  }
+
+  public KendrickPlotDataTypes getyKendrickDataType() {
+    return yKendrickDataType;
+  }
+
+  public KendrickPlotDataTypes getColorKendrickDataType() {
+    return colorKendrickDataType;
+  }
+
+  public KendrickPlotDataTypes getBubbleKendrickDataType() {
+    return bubbleKendrickDataType;
+  }
+
+  public int getxDivisor() {
+    return xDivisor;
+  }
+
+  public int getxCharge() {
+    return xCharge;
+  }
+
+  public int getyDivisor() {
+    return yDivisor;
+  }
+
+  public int getyCharge() {
+    return yCharge;
+  }
+
   @Override
   public int getSeriesCount() {
     return 1;
@@ -292,18 +368,40 @@ public class KendrickMassPlotXYZDataset extends AbstractXYZDataset {
     return getRowKey(series);
   }
 
-  private double getKendrickMassFactor(String formula) {
-    double exactMassFormula = FormulaUtils.calculateExactMass(formula);
-    return ((int) ((exactMassFormula) + 0.5d)) / (exactMassFormula);
+  private double calculateKendrickMassFactorDivisorDependent(String kendrickMassBase, int divisor) {
+    double exactMassFormula = FormulaUtils.calculateExactMass(kendrickMassBase);
+    return Math.round(exactMassFormula / divisor) / (exactMassFormula / divisor);
   }
 
-  private double calculateKendrickMass(double mz, String kendrickMassBase) {
-    return mz * getKendrickMassFactor(kendrickMassBase);
+  private double calculateKendrickMassChargeAndDivisorDependent(double mz, String kendrickMassBase,
+      int charge, int divisor) {
+    return charge * mz * calculateKendrickMassFactorDivisorDependent(kendrickMassBase, divisor);
   }
 
-  private double calculateKendrickMassDefect(double mz, String kendrickMassBase) {
-    return Math.ceil(mz * getKendrickMassFactor(kendrickMassBase)) - mz * getKendrickMassFactor(
-        kendrickMassBase);
+  private double calculateKendrickMassDefectChargeAndDivisorDependent(double mz,
+      String kendrickMassBase, int charge, int divisor) {
+    double kendrickMassChargeAndDivisorDependent = calculateKendrickMassChargeAndDivisorDependent(
+        mz, kendrickMassBase, charge,
+        divisor);
+    return Math.round(
+        kendrickMassChargeAndDivisorDependent)
+        - kendrickMassChargeAndDivisorDependent;
+  }
+
+  private double calculateRemainderOfKendrickMassChargeAndDivisorDependent(double mz,
+      String kendrickMassBase, int charge, int divisor) {
+    double repeatingUnitMass = FormulaUtils.calculateExactMass(kendrickMassBase);
+    double fractionalUnit =
+        (charge * (divisor - Math.round(repeatingUnitMass)) * mz) / repeatingUnitMass;
+    return fractionalUnit - Math.round(fractionalUnit);
+  }
+
+  /*
+   * Method to calculate the divisor for Kendrick mass defect analysis
+   */
+  private int calculateDivisorKM(String formula) {
+    double exactMass = FormulaUtils.calculateExactMass(formula);
+    return (int) Math.round(exactMass);
   }
 
 }
