@@ -1033,8 +1033,7 @@ public class FeatureTableFX extends TreeTableView<ModularFeatureListRow> impleme
       return;
     }
     flist.getRows().removeListener(this);
-    flist.modularStream().forEach(ModularFeatureListRow::clearBufferedColCharts);
-    flist.streamFeatures().forEach(ModularFeature::clearBufferedColCharts);
+    flist.onFeatureTableFxClosed();
   }
 
   public DataTypeCheckListParameter getRowTypesParameter() {
