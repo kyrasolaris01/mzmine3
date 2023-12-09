@@ -27,6 +27,7 @@ package io.github.mzmine.modules.visualization.kendrickmassplot;
 
 import io.github.mzmine.datamodel.features.FeatureList;
 import io.github.mzmine.datamodel.features.FeatureListRow;
+import io.github.mzmine.gui.chartbasics.simplechart.datasets.XYZBubbleDataset;
 import io.github.mzmine.parameters.ParameterSet;
 import io.github.mzmine.util.FormulaUtils;
 import java.util.List;
@@ -37,7 +38,7 @@ import org.jfree.data.xy.AbstractXYZDataset;
  *
  * @author Ansgar Korf (ansgar.korf@uni-muenster.de)
  */
-public class KendrickMassPlotXYZDataset extends AbstractXYZDataset {
+public class KendrickMassPlotXYZDataset extends AbstractXYZDataset implements XYZBubbleDataset {
 
   private final FeatureListRow[] selectedRows;
   private double[] xValues;
@@ -282,7 +283,13 @@ public class KendrickMassPlotXYZDataset extends AbstractXYZDataset {
     return colorScaleValues[item];
   }
 
-  public double getBubbleSize(int series, int item) {
+  @Override
+  public Number getBubbleSize(int series, int item) {
+    return bubbleSizeValues[item];
+  }
+
+  @Override
+  public double getBubbleSizeValue(int series, int item) {
     return bubbleSizeValues[item];
   }
 
